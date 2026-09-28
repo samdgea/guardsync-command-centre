@@ -106,13 +106,14 @@ export default function CheckpointsPage() {
 
   const handleOpenAdd = () => {
     setEditingCheckpoint(null);
+    const activeSite = sitesList.find((s) => s.id === (selectedSiteId || sitesList[0]?.id));
     setFormData({
       siteId: selectedSiteId || (sitesList[0]?.id ?? ''),
       code: '',
       name: '',
       description: '',
-      latitude: -6.21461,
-      longitude: 106.81844,
+      latitude: activeSite?.latitude ?? -6.21461,
+      longitude: activeSite?.longitude ?? 106.81844,
       useCheckpointGeofence: true,
     });
     setIsAddModalOpen(true);
@@ -292,7 +293,17 @@ export default function CheckpointsPage() {
                   required
                   disabled={!!editingCheckpoint}
                   value={formData.siteId}
-                  onChange={(e) => setFormData({ ...formData, siteId: e.target.value })}
+                  onChange={(e) => {
+                    const newSiteId = e.target.value;
+                    const siteObj = sitesList.find((s) => s.id === newSiteId);
+                    setFormData((prev) => ({
+                      ...prev,
+                      siteId: newSiteId,
+                      ...(siteObj?.latitude && siteObj?.longitude
+                        ? { latitude: siteObj.latitude, longitude: siteObj.longitude }
+                        : {}),
+                    }));
+                  }}
                   className="w-full h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs focus:ring-2 focus:ring-slate-900"
                 >
                   <option value="">-- Pilih Situs --</option>

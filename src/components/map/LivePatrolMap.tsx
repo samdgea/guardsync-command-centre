@@ -45,6 +45,17 @@ export function LivePatrolMap({ sessions }: LivePatrolMapProps) {
         const markersLayer = L.layerGroup().addTo(map);
         markersLayerRef.current = markersLayer;
         mapInstanceRef.current = map;
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 150);
+
+        if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+          const ro = new ResizeObserver(() => {
+            map.invalidateSize();
+          });
+          ro.observe(mapContainerRef.current);
+        }
       }
 
       // Update markers
@@ -115,6 +126,7 @@ export function LivePatrolMap({ sessions }: LivePatrolMapProps) {
   return (
     <div
       ref={mapContainerRef}
+      style={{ width: '100%', height: '100%', minHeight: '400px' }}
       className="w-full h-full min-h-[400px] rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm relative z-0"
     />
   );

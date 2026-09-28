@@ -89,12 +89,30 @@ export function MapPicker({
             onChange?.({ latitude: Number(lat.toFixed(6)), longitude: Number(lng.toFixed(6)) });
           });
         }
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 150);
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 350);
+
+        if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+          resizeObserver = new ResizeObserver(() => {
+            map.invalidateSize();
+          });
+          resizeObserver.observe(mapContainerRef.current);
+        }
       }
     }
 
+    let resizeObserver: ResizeObserver | null = null;
     initMap();
 
     return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -109,12 +127,13 @@ export function MapPicker({
       circleRef.current.setLatLng([latitude, longitude]);
       circleRef.current.setRadius(radiusMeters);
       mapInstanceRef.current.setView([latitude, longitude]);
+      mapInstanceRef.current.invalidateSize();
     }
   }, [latitude, longitude, radiusMeters]);
 
   if (!isClient) {
     return (
-      <div className="w-full h-64 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs text-slate-500">
+      <div className="w-full h-[300px] rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs text-slate-500">
         Memuat Peta...
       </div>
     );
@@ -124,7 +143,8 @@ export function MapPicker({
     <div className="space-y-2">
       <div
         ref={mapContainerRef}
-        className="w-full h-72 rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden shadow-sm"
+        style={{ height: '300px', width: '100%' }}
+        className="w-full h-[300px] min-h-[300px] rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden shadow-sm"
       />
       {interactive && (
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
