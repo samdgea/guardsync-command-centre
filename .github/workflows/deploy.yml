@@ -1,0 +1,114 @@
+name: Deploy Frontend to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create production env file
+        run: |
+          cat << 'EOF' > .env.production
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://be.guardsync-dev.syntherion.co.id' }}
+          EOF
+
+      - name: Build Next.js standalone application
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://be.guardsync-dev.syntherion.co.id' }}
+          NODE_ENV: production
+
+      - name: Prepare deployment bundle
+        run: |
+          mkdir -p deploy-package
+          
+          # Copy standalone output (server.js, minimal node_modules, package.json, etc.)
+          cp -r .next/standalone/* deploy-package/
+          
+          # Next.js standalone requires static assets copied into .next/static
+          mkdir -p deploy-package/.next/static
+          cp -r .next/static/* deploy-package/.next/static/
+          
+          # Copy public directory if exists
+          if [ -d "public" ]; then
+            cp -r public deploy-package/
+          fi
+          
+          # Copy PM2 configuration
+          cp ecosystem.config.cjs deploy-package/
+          
+          # Copy .env.production to .env in deploy package
+          if [ -f ".env.production" ]; then
+            cp .env.production deploy-package/.env
+          fi
+
+          # Archive bundle for ultra-fast transfer
+          tar -czf deploy.tar.gz -C deploy-package .
+
+      - name: Upload bundle to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: 'deploy.tar.gz'
+          target: '/tmp'
+
+      - name: Deploy & Restart App on VPS via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            TARGET_DIR="${{ secrets.VPS_TARGET_DIR || '/var/www/guardsync-fe' }}"
+            
+            echo "Deploying to ${TARGET_DIR}..."
+            mkdir -p "${TARGET_DIR}"
+            
+            # Extract artifact
+            tar -xzf /tmp/deploy.tar.gz -C "${TARGET_DIR}"
+            rm -f /tmp/deploy.tar.gz
+            
+            cd "${TARGET_DIR}"
+            
+            # Ensure PM2 is installed
+            if ! command -v pm2 >/dev/null 2>&1; then
+              echo "PM2 not found. Installing PM2 globally..."
+              npm install -g pm2
+            fi
+            
+            # Reload or start process using PM2
+            echo "Restarting application with PM2..."
+            pm2 startOrReload ecosystem.config.cjs --env production
+            pm2 save
+            
+            echo "Deployment successfully completed!"
