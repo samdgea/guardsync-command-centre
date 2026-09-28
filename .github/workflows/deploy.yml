@@ -43,12 +43,12 @@ jobs:
         run: |
           mkdir -p deploy-package
           
-          # Copy standalone output (server.js, minimal node_modules, package.json, etc.)
-          cp -r .next/standalone/* deploy-package/
+          # Copy standalone output including hidden files (.next, etc.)
+          cp -r .next/standalone/. deploy-package/
           
           # Next.js standalone requires static assets copied into .next/static
           mkdir -p deploy-package/.next/static
-          cp -r .next/static/* deploy-package/.next/static/
+          cp -r .next/static/. deploy-package/.next/static/
           
           # Copy public directory if exists
           if [ -d "public" ]; then
@@ -134,9 +134,14 @@ jobs:
             
             cd "${TARGET_DIR}"
             
-            # Reload or start process using PM2
+            # Clean and restart PM2 process
             echo "Restarting application with PM2..."
-            pm2 startOrReload ecosystem.config.cjs --env production
+            pm2 delete guardsync-fe 2>/dev/null || true
+            pm2 start ecosystem.config.cjs --env production
             pm2 save
+            
+            # Wait 2 seconds and check status
+            sleep 2
+            pm2 status
             
             echo "Deployment successfully completed!"
