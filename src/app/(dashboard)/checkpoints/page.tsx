@@ -104,6 +104,25 @@ export default function CheckpointsPage() {
     },
   });
 
+  const downloadAllMutation = useMutation({
+    mutationFn: (siteId: string) => checkpointsApi.downloadAllCheckpoints(siteId),
+    onSuccess: () => {
+      toast.success('File PDF QR Checkpoint berhasil diunduh');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Gagal mengunduh QR Checkpoint');
+    },
+  });
+
+  const handleDownloadAll = () => {
+    const targetSiteId = selectedSiteId || (sitesList.length === 1 ? sitesList[0].id : null);
+    if (!targetSiteId) {
+      toast.error('Silakan pilih situs terlebih dahulu untuk mengunduh seluruh QR Checkpoint');
+      return;
+    }
+    downloadAllMutation.mutate(targetSiteId);
+  };
+
   const handleOpenAdd = () => {
     setEditingCheckpoint(null);
     const activeSite = sitesList.find((s) => s.id === (selectedSiteId || sitesList[0]?.id));
@@ -176,10 +195,26 @@ export default function CheckpointsPage() {
           </p>
         </div>
 
-        <Button onClick={handleOpenAdd} className="text-xs">
-          <Plus className="h-4 w-4 mr-1.5" />
-          Tambah Checkpoint
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleDownloadAll}
+            disabled={downloadAllMutation.isPending}
+            className="text-xs"
+          >
+            {downloadAllMutation.isPending ? (
+              <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-1.5" />
+            )}
+            Download All Checkpoint QR
+          </Button>
+
+          <Button onClick={handleOpenAdd} className="text-xs">
+            <Plus className="h-4 w-4 mr-1.5" />
+            Tambah Checkpoint
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
