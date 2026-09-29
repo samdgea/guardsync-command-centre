@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import PhotoUploader from '@/components/PhotoUploader';
 import { UserCircle, Lock, Shield, Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,7 +29,21 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(
+    user?.profilePhotoUrl ?? null
+  );
+
+  const handlePhotoUpdated = useCallback(
+    (newUrl: string | null) => {
+      setProfilePhotoUrl(newUrl);
+      if (user) {
+        setUser({ ...user, profilePhotoUrl: newUrl });
+      }
+    },
+    [user, setUser]
+  );
 
   const {
     register,
@@ -60,7 +75,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 flex items-center gap-2">
           <UserCircle className="h-6 w-6 text-slate-700 dark:text-slate-300" />
@@ -70,6 +85,29 @@ export default function ProfilePage() {
           Informasi kredensial administrator dan pengaturan keamanan kata sandi akun.
         </p>
       </div>
+
+      {/* Profile Photo Section */}
+      {user && (
+        <Card>
+          <CardContent className="pt-6">
+            <PhotoUploader
+              user={{
+                id: user.id,
+                employeeId: user.employeeId,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                active: user.active,
+                profilePhotoUrl: profilePhotoUrl,
+              }}
+              currentUserRole={user.role}
+              isOwnProfile
+              size="xl"
+              onPhotoUpdated={handlePhotoUpdated}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>

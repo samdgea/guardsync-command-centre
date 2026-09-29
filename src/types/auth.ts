@@ -22,6 +22,7 @@ export interface AuthUser {
   name: string;
   role: UserRole;
   active: boolean;
+  profilePhotoUrl?: string | null;
   assignments: SiteAssignmentBrief[];
 }
 

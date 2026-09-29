@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/authStore';
-import { User, CreateUserPayload, UpdateUserPayload } from '@/types/user';
+import { User, CreateUserPayload, UpdateUserPayload, canEditUserPhoto } from '@/types/user';
 import { UserRole } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,8 @@ import {
 } from '@/components/ui/dialog';
 import { Pagination } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, UserPlus, Edit, KeyRound, UserX, Search } from 'lucide-react';
+import PhotoUploader from '@/components/PhotoUploader';
+import { Users, UserPlus, Edit, KeyRound, UserX, Search, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function UsersPage() {
@@ -38,6 +39,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [photoModalUser, setPhotoModalUser] = useState<User | null>(null);
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [newResetPassword, setNewResetPassword] = useState('');
 
@@ -103,6 +106,18 @@ export default function UsersPage() {
       toast.error(err.response?.data?.message || err.message || 'Gagal mereset kata sandi');
     },
   });
+
+  const handleOpenPhoto = (user: User) => {
+    setPhotoModalUser(user);
+    setIsPhotoModalOpen(true);
+  };
+
+  const handlePhotoUpdated = (newUrl: string | null) => {
+    queryClient.invalidateQueries({ queryKey: ['users-list'] });
+    if (photoModalUser) {
+      setPhotoModalUser({ ...photoModalUser, profilePhotoUrl: newUrl });
+    }
+  };
 
   const handleOpenAdd = () => {
     setTargetUser(null);
@@ -247,6 +262,17 @@ export default function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
+                    {canEditUserPhoto(currentUser?.role ?? 'OFFICER', u.role) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                        title="Ubah Foto Profil"
+                        onClick={() => handleOpenPhoto(u)}
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -415,6 +441,35 @@ export default function UsersPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Upload Modal */}
+      <Dialog open={isPhotoModalOpen} onOpenChange={setIsPhotoModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Ubah Foto Profil — {photoModalUser?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex justify-center pt-4 pb-2">
+            {photoModalUser && currentUser && (
+              <PhotoUploader
+                user={photoModalUser}
+                currentUserRole={currentUser.role}
+                isOwnProfile={false}
+                onPhotoUpdated={handlePhotoUpdated}
+              />
+            )}
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => setIsPhotoModalOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
