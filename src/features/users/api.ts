@@ -7,6 +7,8 @@ import {
   User,
 } from '@/types/user';
 
+import { uploadProfilePhotoDirect } from '@/lib/uploadService';
+
 export const usersApi = {
   getUsers: async (params?: { page?: number; limit?: number; active?: boolean }) => {
     const res = await api.get('/users', { params });
@@ -34,19 +36,16 @@ export const usersApi = {
   },
 
   /**
-   * Upload profile photo for a user.
+   * Upload profile photo for a user via direct S3 pre-signed URL.
    * Pass 'me' as userId to upload for the currently authenticated user.
    */
-  uploadProfilePhoto: async (userId: string | 'me', file: File): Promise<{ profilePhotoUrl: string }> => {
-    const formData = new FormData();
-    formData.append('photo', file);
-
-    const endpoint = userId === 'me' ? '/auth/me/photo' : `/users/${userId}/photo`;
-
-    const res = await api.post(endpoint, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return unwrap<{ profilePhotoUrl: string }>(res).data;
+  uploadProfilePhoto: async (
+    userId: string | 'me',
+    file: File,
+    onProgress?: (percentage: number) => void
+  ): Promise<{ profilePhotoUrl: string }> => {
+    const profilePhotoUrl = await uploadProfilePhotoDirect(userId, file, onProgress);
+    return { profilePhotoUrl };
   },
 
   /**
