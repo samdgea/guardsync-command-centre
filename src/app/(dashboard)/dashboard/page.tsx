@@ -66,7 +66,7 @@ export default function DashboardPage() {
   });
 
   const incidentVisits = React.useMemo(() => {
-    if (!alertsData?.data) return [];
+    if (!alertsData?.data || !Array.isArray(alertsData.data)) return [];
     return alertsData.data.filter(
       (v) => v.condition === 'DARURAT' || v.condition === 'WASPADA'
     );

@@ -111,23 +111,35 @@ export function ComplianceChart({ site }: ComplianceChartProps) {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={chartData}
+                        data={chartData.filter((d) => d.value > 0)}
                         dataKey="value"
                         innerRadius={56}
                         outerRadius={78}
-                        paddingAngle={3}
+                        paddingAngle={chartData.filter((d) => d.value > 0).length > 1 ? 3 : 0}
                         stroke="none"
                       >
-                        {chartData.map((entry, idx) => (
-                          <Cell key={`cell-${idx}`} fill={entry.color} />
-                        ))}
+                        {chartData
+                          .filter((d) => d.value > 0)
+                          .map((entry, idx) => (
+                            <Cell key={`cell-${idx}`} fill={entry.color} />
+                          ))}
                       </Pie>
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#0f172a',
                           borderRadius: '8px',
-                          color: '#fff',
+                          border: '1px solid #334155',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)',
+                        }}
+                        itemStyle={{
+                          color: '#f8fafc',
                           fontSize: '12px',
+                          fontWeight: 500,
+                        }}
+                        labelStyle={{
+                          color: '#cbd5e1',
+                          fontSize: '12px',
+                          fontWeight: 600,
                         }}
                       />
                     </PieChart>

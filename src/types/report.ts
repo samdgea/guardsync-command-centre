@@ -59,8 +59,18 @@ export interface BulkReviewPayload {
   status: ReviewStatus;
 }
 
+export interface ConditionCount {
+  condition: PatrolCondition | string;
+  _count: number;
+}
+
 export interface ReportSummary {
   totalVisits: number;
+  total?: number;
+  today?: number;
+  activeSessions?: number;
+  pending?: number;
+  conditions?: ConditionCount[];
   byCondition: {
     AMAN: number;
     WASPADA: number;

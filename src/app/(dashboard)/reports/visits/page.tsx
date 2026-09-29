@@ -128,7 +128,9 @@ export default function PatrolVisitsReviewPage() {
     }
   };
 
-  const visits = data?.data || [];
+  const rawVisits = data?.data;
+  const visits: PatrolVisit[] = Array.isArray(rawVisits) ? rawVisits : [];
+  const visitsSummary = (data as any)?.summary || (!Array.isArray(rawVisits) && rawVisits ? rawVisits : null);
 
   const handleToggleSelectAll = () => {
     if (selectedIds.length === visits.length) {
@@ -304,8 +306,13 @@ export default function PatrolVisitsReviewPage() {
             <Skeleton className="h-14 w-full" />
           </div>
         ) : visits.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-            Tidak ada laporan kunjungan patroli yang sesuai filter.
+          <div className="p-8 text-center text-sm text-slate-500 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+            <p>Tidak ada laporan kunjungan patroli yang sesuai filter.</p>
+            {visitsSummary && (
+              <p className="text-xs text-slate-400">
+                (Metrik saat ini: Total {visitsSummary.totalVisits ?? visitsSummary.total ?? 0} kunjungan, {visitsSummary.pending ?? 0} menunggu review)
+              </p>
+            )}
           </div>
         ) : (
           <Table>
