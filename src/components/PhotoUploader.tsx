@@ -119,6 +119,7 @@ export default function PhotoUploader({
   const currentSize = SIZES[size] || SIZES.md;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -195,10 +196,13 @@ export default function PhotoUploader({
   const handleSavePreview = async () => {
     if (!previewFile || isUploading) return;
     setIsUploading(true);
+    setUploadProgress(0);
 
     try {
       const targetId = isOwnProfile ? 'me' : user.id;
-      const result = await usersApi.uploadProfilePhoto(targetId, previewFile);
+      const result = await usersApi.uploadProfilePhoto(targetId, previewFile, (percent) => {
+        setUploadProgress(percent);
+      });
       onPhotoUpdated(result.profilePhotoUrl);
 
       if (previewUrl) {
@@ -215,6 +219,7 @@ export default function PhotoUploader({
       toast.error(message);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -372,6 +377,22 @@ export default function PhotoUploader({
               Batal
             </button>
           </div>
+
+          {isUploading && (
+            <div className="w-full max-w-[220px] space-y-1 my-1">
+              <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                <span>Mengunggah ke cloud...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-150 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
             Pratinjau foto • Klik Putar jika orientasi belum pas
           </p>
