@@ -2,10 +2,12 @@ import { api } from '@/lib/api-client';
 import { unwrap } from '@/lib/envelope';
 import {
   BulkReviewPayload,
+  ComplianceFilterParams,
   ComplianceReport,
   PatrolVisit,
   ReportSummary,
   ReviewVisitPayload,
+  SiteComplianceData,
   VisitFilterParams,
 } from '@/types/report';
 
@@ -41,9 +43,13 @@ export const reportsApi = {
     return unwrap<ReportSummary>(res).data;
   },
 
-  getCompliance: async (params?: { date?: string; from?: string; to?: string }) => {
+  getCompliance: async (params?: ComplianceFilterParams) => {
     const res = await api.get('/reports/compliance', { params });
-    return unwrap<ComplianceReport>(res).data;
+    const rawData = unwrap<SiteComplianceData[] | SiteComplianceData>(res).data;
+    if (Array.isArray(rawData)) {
+      return rawData;
+    }
+    return rawData ? [rawData] : [];
   },
 
   exportCsv: async (params?: VisitFilterParams) => {

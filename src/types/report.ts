@@ -97,12 +97,41 @@ export interface ComplianceReport {
   byOfficer: OfficerCompliance[];
 }
 
+export interface ComplianceCheckpointItem {
+  id: string;
+  checkpointCode: string;
+  checkpointName: string;
+  description?: string | null;
+  visited: boolean;
+}
+
+export interface SiteComplianceData {
+  id: string;
+  code: string;
+  name: string;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  radiusMeters?: number;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  checkpoints: ComplianceCheckpointItem[];
+}
+
 export interface VisitFilterParams {
   page?: number;
   limit?: number;
   siteId?: string;
   condition?: PatrolCondition;
   reviewStatus?: ReviewStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface ComplianceFilterParams {
+  siteId?: string;
+  date?: string;
   from?: string;
   to?: string;
 }
