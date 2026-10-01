@@ -350,14 +350,17 @@ export default function PatrolVisitsReviewPage() {
                     ? 'waspada'
                     : 'aman';
 
+                const currentReviewStatus = (visit.review_status || visit.reviewStatus || 'PENDING') as ReviewStatus;
+                const scanTime = visit.created_at || visit.createdAt;
+
                 const reviewVariant =
-                  visit.reviewStatus === 'RESOLVED'
+                  currentReviewStatus === 'RESOLVED'
                     ? 'resolved'
-                    : visit.reviewStatus === 'ESCALATED'
+                    : currentReviewStatus === 'ESCALATED'
                     ? 'escalated'
-                    : visit.reviewStatus === 'REVIEWED'
+                    : currentReviewStatus === 'REVIEWED'
                     ? 'reviewed'
-                    : visit.reviewStatus === 'ACKNOWLEDGED'
+                    : currentReviewStatus === 'ACKNOWLEDGED'
                     ? 'acknowledged'
                     : 'pending';
 
@@ -380,7 +383,7 @@ export default function PatrolVisitsReviewPage() {
                       </button>
                     </TableCell>
                     <TableCell className="text-xs font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {formatDate(visit.createdAt)}
+                      {formatDate(scanTime)}
                     </TableCell>
                     <TableCell className="font-semibold text-xs text-slate-900 dark:text-slate-100">
                       {visit.checkpoint?.name || 'Checkpoint'}
@@ -391,9 +394,9 @@ export default function PatrolVisitsReviewPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-slate-700 dark:text-slate-300">
-                      {visit.officer?.name || 'Petugas'}
+                      {visit.user?.name || visit.officer?.name || 'Petugas'}
                       <span className="block text-[10px] text-slate-400">
-                        {visit.officer?.employeeId}
+                        {visit.user?.employee_id || visit.user?.employeeId || visit.officer?.employeeId}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -413,7 +416,7 @@ export default function PatrolVisitsReviewPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={reviewVariant} className="text-[10px] uppercase">
-                        {visit.reviewStatus}
+                        {currentReviewStatus}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-1">

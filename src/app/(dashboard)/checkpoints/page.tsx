@@ -259,7 +259,15 @@ export default function CheckpointsPage() {
                     {cp.description || '-'}
                   </TableCell>
                   <TableCell className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                    {cp.latitude ? `${cp.latitude}, ${cp.longitude}` : '-'}
+                    {(() => {
+                      if (!cp.coordinate) return '-';
+                      if (typeof cp.coordinate === 'string') return cp.coordinate;
+                      if (Array.isArray(cp.coordinate)) return cp.coordinate.join(', ');
+                      if (typeof cp.coordinate === 'object' && 'latitude' in cp.coordinate && 'longitude' in cp.coordinate) {
+                        return `${cp.coordinate.latitude}, ${cp.coordinate.longitude}`;
+                      }
+                      return String(cp.coordinate);
+                    })()}
                   </TableCell>
                   <TableCell className="text-xs">
                     {cp.useCheckpointGeofence ? (

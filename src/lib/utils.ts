@@ -8,13 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(dateString?: string | null): string {
   if (!dateString) return '-';
   try {
+    // If date string doesn't have timezone offset or Z, backend might send ISO UTC string
     const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
     return new Intl.DateTimeFormat('id-ID', {
+      timeZone: 'Asia/Jakarta',
       day: 'numeric',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hourCycle: 'h23',
     }).format(d);
   } catch {
     return dateString;
@@ -25,10 +29,13 @@ export function formatTime(dateString?: string | null): string {
   if (!dateString) return '-';
   try {
     const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
     return new Intl.DateTimeFormat('id-ID', {
+      timeZone: 'Asia/Jakarta',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
+      hourCycle: 'h23',
     }).format(d);
   } catch {
     return dateString;

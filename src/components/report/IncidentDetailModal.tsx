@@ -104,7 +104,7 @@ export function IncidentDetailModal({
               </div>
             </div>
             <DialogDescription className="text-xs text-slate-500">
-              Waktu scan: {formatDate(visit.createdAt)}
+              Waktu scan: {formatDate(visit.created_at || visit.createdAt)}
             </DialogDescription>
           </DialogHeader>
 
@@ -130,10 +130,10 @@ export function IncidentDetailModal({
                   Petugas Pelapor
                 </div>
                 <div className="font-semibold text-slate-900 dark:text-slate-100">
-                  {visit.officer?.name || 'Petugas Satpam'}
+                  {visit.user?.name || visit.officer?.name || 'Petugas Satpam'}
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  NIK: {visit.officer?.employeeId || '-'}
+                  NIK: {visit.user?.employee_id || visit.user?.employeeId || visit.officer?.employeeId || '-'}
                 </div>
               </div>
             </div>

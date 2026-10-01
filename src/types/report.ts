@@ -34,14 +34,24 @@ export interface PatrolVisit {
   longitude?: number | null;
   distanceMeters?: number;
   reviewStatus: ReviewStatus;
+  review_status?: ReviewStatus;
   cooldownBypassed?: boolean;
   createdAt: string;
+  created_at?: string;
   photos: PatrolPhoto[];
   statusLogs: StatusLog[];
   checkpoint?: {
     id?: string;
     code?: string;
     name?: string;
+  };
+  user?: {
+    id?: string;
+    name?: string;
+    employee_id?: string;
+    employeeId?: string;
+    username?: string;
+    role?: string;
   };
   officer?: {
     id?: string;

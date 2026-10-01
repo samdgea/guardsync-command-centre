@@ -168,24 +168,24 @@ export default function LogbooksPage() {
                     <TableCell className="text-xs">
                       <div className="flex items-center gap-1.5 font-medium text-slate-900 dark:text-slate-100">
                         <User className="h-3.5 w-3.5 text-slate-400" />
-                        {lb.creator?.name || 'Petugas'}
+                        {lb.createdBy?.name || '-'}
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-slate-600 dark:text-slate-400">
-                      {lb.receiver?.name ? (
+                      {lb.acceptedBy?.name ? (
                         <div className="flex items-center gap-1.5 font-medium text-slate-900 dark:text-slate-100">
                           <User className="h-3.5 w-3.5 text-slate-400" />
-                          {lb.receiver.name}
+                          {lb.acceptedBy.name}
                         </div>
                       ) : (
                         <span className="italic text-slate-400">Menunggu serah terima</span>
                       )}
                     </TableCell>
                     <TableCell className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                      {formatDate(lb.openedAt)}
+                      {formatDate(lb.createdAt)}
                     </TableCell>
                     <TableCell className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                      {lb.closedAt ? formatDate(lb.closedAt) : '-'}
+                      {lb.acceptedAt ? formatDate(lb.acceptedAt) : '-'}
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusVariant} className="text-[10px] uppercase">

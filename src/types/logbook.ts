@@ -36,14 +36,14 @@ export interface LogBook {
   siteId: string;
   shift: string;
   status: LogBookStatus;
-  openedAt: string;
-  closedAt?: string | null;
-  creator: {
-    id: string;
+  createdAt?: string;
+  acceptedAt?: string | null;
+  createdBy?: {
+    id?: string;
     name: string;
-  };
-  receiver?: {
-    id: string;
+  } | null;
+  acceptedBy?: {
+    id?: string;
     name: string;
   } | null;
   items?: LogBookItemCheck[];

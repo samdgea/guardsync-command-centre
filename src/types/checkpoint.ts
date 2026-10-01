@@ -4,6 +4,7 @@ export interface Checkpoint {
   code: string;
   name: string;
   description?: string | null;
+  coordinate?: string | { latitude: number; longitude: number } | [number, number] | null;
   latitude?: number | null;
   longitude?: number | null;
   useCheckpointGeofence?: boolean;

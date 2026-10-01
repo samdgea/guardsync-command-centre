@@ -124,10 +124,10 @@ export default function LogbookDetailPage() {
             <span className="text-slate-500 font-medium">Petugas Buka Shift (Pembuat)</span>
             <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-slate-400" />
-              {logbook?.creator?.name || 'Petugas'}
+              {logbook?.createdBy?.name || '-'}
             </div>
             <div className="text-slate-500 text-[11px]">
-              Dibuka: {formatDate(logbook?.openedAt)}
+              Dibuka: {formatDate(logbook?.createdAt)}
             </div>
           </div>
 
@@ -135,10 +135,10 @@ export default function LogbookDetailPage() {
             <span className="text-slate-500 font-medium">Petugas Terima Shift (Penerima)</span>
             <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-slate-400" />
-              {logbook?.receiver?.name || '-'}
+              {logbook?.acceptedBy?.name || '-'}
             </div>
             <div className="text-slate-500 text-[11px]">
-              Ditutup: {logbook?.closedAt ? formatDate(logbook.closedAt) : 'Belum Ditutup'}
+              Ditutup: {logbook?.acceptedAt ? formatDate(logbook.acceptedAt) : 'Belum Ditutup'}
             </div>
           </div>
 

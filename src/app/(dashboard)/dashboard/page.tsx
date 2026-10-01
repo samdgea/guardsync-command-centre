@@ -328,7 +328,7 @@ export default function DashboardPage() {
                     {visit.notes || 'Tanpa catatan tertulis.'}
                   </p>
                   <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                    <span>Oleh: {visit.officer?.name || 'Satpam'}</span>
+                    <span>Oleh: {visit.user?.name || visit.officer?.name || 'Satpam'}</span>
                     <span className="text-blue-600 dark:text-blue-400 font-medium">
                       Buka Rincian →
                     </span>
