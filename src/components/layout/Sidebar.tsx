@@ -18,6 +18,7 @@ import {
   BookOpen,
   UserCircle,
   Shield,
+  CalendarClock,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -27,6 +28,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   exact?: boolean;
   superAdminOnly?: boolean;
+  adminOnly?: boolean;
 }
 
 interface NavGroup {
@@ -46,7 +48,8 @@ const navigationItems: NavGroup[] = [
     title: 'Master Data',
     items: [
       { name: 'Situs / Site', href: '/sites', icon: Building, superAdminOnly: true },
-      { name: 'Master Shift', href: '/shifts', icon: Clock },
+      { name: 'Master Shift', href: '/shifts', icon: Clock, superAdminOnly: true },
+      { name: 'Manajemen Roster & Jadwal', href: '/roster', icon: CalendarClock, adminOnly: true },
       { name: 'Checkpoint & QR', href: '/checkpoints', icon: QrCode },
       { name: 'Inventaris Pos', href: '/inventory', icon: Package },
       { name: 'Pengguna & Petugas', href: '/users', icon: Users },
@@ -73,6 +76,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN';
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 min-h-screen">
@@ -94,9 +98,11 @@ export function Sidebar() {
       {/* Nav list */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {navigationItems.map((group) => {
-          const visibleItems = group.items.filter(
-            (item) => !item.superAdminOnly || isSuperAdmin
-          );
+          const visibleItems = group.items.filter((item) => {
+            if (item.superAdminOnly && !isSuperAdmin) return false;
+            if (item.adminOnly && !isAdmin) return false;
+            return true;
+          });
 
           if (visibleItems.length === 0) return null;
 
