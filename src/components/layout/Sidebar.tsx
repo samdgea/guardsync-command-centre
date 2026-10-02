@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   MapPin,
   Building,
+  Clock,
   QrCode,
   Package,
   Users,
@@ -45,6 +46,7 @@ const navigationItems: NavGroup[] = [
     title: 'Master Data',
     items: [
       { name: 'Situs / Site', href: '/sites', icon: Building, superAdminOnly: true },
+      { name: 'Master Shift', href: '/shifts', icon: Clock },
       { name: 'Checkpoint & QR', href: '/checkpoints', icon: QrCode },
       { name: 'Inventaris Pos', href: '/inventory', icon: Package },
       { name: 'Pengguna & Petugas', href: '/users', icon: Users },

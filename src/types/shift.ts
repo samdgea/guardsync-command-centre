@@ -1,6 +1,11 @@
 export interface Shift {
   id: string;
   siteId?: string | null;
+  site?: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
   code: string;
   name: string;
   startTime?: string | null;
@@ -15,13 +20,29 @@ export interface Shift {
 
 export interface CreateShiftPayload {
   siteId?: string | null;
-  code: string;
+  code?: string;
   name: string;
   startTime?: string | null;
   endTime?: string | null;
   lateToleranceMinutes?: number;
   isOff?: boolean;
   active?: boolean;
+}
+
+export interface UpdateShiftPayload {
+  name?: string;
+  code?: string;
+  siteId?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  lateToleranceMinutes?: number;
+  isOff?: boolean;
+  active?: boolean;
+}
+
+export interface GetShiftsParams {
+  siteId?: string;
+  activeOnly?: boolean;
 }
 
 export type ScheduleType = 'ROSTER' | 'FIXED' | null;

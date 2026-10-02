@@ -7,3 +7,4 @@ export * from './inventory';
 export * from './report';
 export * from './patrol';
 export * from './logbook';
+export * from './shift';

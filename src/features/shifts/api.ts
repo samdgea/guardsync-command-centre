@@ -8,23 +8,33 @@ import {
   Shift,
   SiteRosterResponse,
   UpdateRosterTeamPayload,
+  UpdateShiftPayload,
 } from '@/types/shift';
 
 export const shiftsApi = {
-  /**
-   * Mengambil daftar master shift kerja (global & spesifik site)
-   */
-  getShifts: async (params?: { siteId?: string; active?: boolean }) => {
+  getShifts: async (params?: { siteId?: string; activeOnly?: boolean; active?: boolean }) => {
     const res = await api.get('/shifts', { params });
     return unwrap<Shift[]>(res);
   },
 
-  /**
-   * Membuat master shift baru
-   */
+  getShift: async (id: string) => {
+    const res = await api.get(`/shifts/${id}`);
+    return unwrap<Shift>(res).data;
+  },
+
   createShift: async (payload: CreateShiftPayload) => {
     const res = await api.post('/shifts', payload);
     return unwrap<Shift>(res).data;
+  },
+
+  updateShift: async (id: string, payload: UpdateShiftPayload) => {
+    const res = await api.patch(`/shifts/${id}`, payload);
+    return unwrap<Shift>(res).data;
+  },
+
+  deleteShift: async (id: string) => {
+    const res = await api.delete(`/shifts/${id}`);
+    return unwrap<null>(res);
   },
 
   /**
