@@ -35,6 +35,8 @@ import {
   Users,
   Search,
   ExternalLink,
+  Calendar,
+  Layers,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -270,6 +272,16 @@ export default function SitesPage() {
                     <Link href={`/sites/${site.id}`}>
                       <Button variant="ghost" size="icon" className="h-8 w-8" title="Kelola Petugas">
                         <Users className="h-4 w-4 text-slate-600" />
+                      </Button>
+                    </Link>
+                    <Link href={`/sites/${site.id}/roster-teams`}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Kelola Tim Roster">
+                        <Layers className="h-4 w-4 text-blue-600" />
+                      </Button>
+                    </Link>
+                    <Link href={`/sites/${site.id}/schedule-matrix`}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Matriks Kalender Jadwal">
+                        <Calendar className="h-4 w-4 text-indigo-600" />
                       </Button>
                     </Link>
                     <Button

@@ -1,10 +1,25 @@
+import { RosterTeam, ScheduleType, Shift } from './shift';
+
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'SUPERVISOR' | 'OFFICER';
 
 export interface SiteAssignmentBrief {
   id: string;
   userId?: string;
   siteId: string;
-  shift?: string;
+  scheduleType?: ScheduleType;
+  rosterTeamId?: string | null;
+  rosterTeam?: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
+  shiftId?: string | null;
+  shift?: Shift | string | null;
+  todayShift?: Shift | null;
+  isOffDay?: boolean;
+  workDays?: number[] | null;
+  shiftPattern?: string[] | null;
+  patternStartDate?: string | null;
   primary?: boolean;
   name?: string;
   code?: string;

@@ -1,3 +1,5 @@
+import { RosterTeam, ScheduleType, Shift } from './shift';
+
 export interface Site {
   id: string;
   code: string;
@@ -39,11 +41,26 @@ export interface SiteOfficer {
   id: string;
   userId: string;
   siteId: string;
-  shift?: string | null;
+  scheduleType?: ScheduleType;
+  rosterTeamId?: string | null;
+  rosterTeam?: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
+  shiftId?: string | null;
+  shift?: Shift | null;
+  shiftPattern?: string[] | null;
+  patternStartDate?: string | null;
+  workDays?: number[] | null;
+  todayShift?: Shift | null;
+  isOffDay?: boolean;
   primary?: boolean;
-  startDate?: string;
+  startDate?: string | null;
   endDate?: string | null;
   active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   user: {
     id: string;
     name: string;
@@ -54,6 +71,18 @@ export interface SiteOfficer {
 
 export interface AssignOfficerPayload {
   userId: string;
-  shift?: string;
+  scheduleType?: ScheduleType;
+  rosterTeamId?: string | null;
+  shiftId?: string | null;
+  workDays?: number[] | null;
   primary?: boolean;
+}
+
+export interface UpdateOfficerAssignmentPayload {
+  scheduleType?: ScheduleType;
+  rosterTeamId?: string | null;
+  shiftId?: string | null;
+  workDays?: number[] | null;
+  primary?: boolean;
+  active?: boolean;
 }
