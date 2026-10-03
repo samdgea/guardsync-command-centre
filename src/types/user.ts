@@ -1,5 +1,27 @@
 import { UserRole } from './auth';
 
+export interface UserAssignmentBrief {
+  id: string;
+  siteId: string;
+  scheduleType?: 'ROSTER' | 'FIXED' | null;
+  rosterTeamId?: string | null;
+  rosterTeam?: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
+  shiftId?: string | null;
+  shift?: {
+    id: string;
+    code: string;
+    name: string;
+    startTime?: string;
+    endTime?: string;
+  } | null;
+  workDays?: number[] | null;
+  primary?: boolean;
+}
+
 export interface User {
   id: string;
   employeeId: string;
@@ -8,6 +30,7 @@ export interface User {
   role: UserRole;
   active: boolean;
   profilePhotoUrl?: string | null;
+  assignment?: UserAssignmentBrief | null;
   createdAt?: string;
   updatedAt?: string;
 }

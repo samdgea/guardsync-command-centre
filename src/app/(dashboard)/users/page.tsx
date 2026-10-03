@@ -28,7 +28,23 @@ import {
 import { Pagination } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import PhotoUploader from '@/components/PhotoUploader';
-import { Users, UserPlus, Edit, KeyRound, UserX, Search, Camera, Building2, Info } from 'lucide-react';
+import { AssignOfficerModal } from '@/components/sites/AssignOfficerModal';
+import { SiteOfficer } from '@/types/site';
+import {
+  Users,
+  UserPlus,
+  Edit,
+  KeyRound,
+  UserX,
+  Search,
+  Camera,
+  Building2,
+  Info,
+  CalendarClock,
+  Clock,
+  Layers,
+  UserCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function UsersPage() {
@@ -46,6 +62,10 @@ export default function UsersPage() {
   const [photoModalUser, setPhotoModalUser] = useState<User | null>(null);
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [newResetPassword, setNewResetPassword] = useState('');
+
+  // Roster assignment modal state
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
+  const [officerForRoster, setOfficerForRoster] = useState<SiteOfficer | null>(null);
 
   // Determine site assignments for ADMIN
   const assignedSites = useMemo(() => {
@@ -205,6 +225,35 @@ export default function UsersPage() {
     setIsResetModalOpen(true);
   };
 
+  const handleOpenAdjustRoster = (u: User) => {
+    const officer: SiteOfficer = {
+      id: u.assignment?.id || '',
+      userId: u.id,
+      siteId: activeSiteId,
+      scheduleType: u.assignment?.scheduleType || undefined,
+      rosterTeamId: u.assignment?.rosterTeamId || u.assignment?.rosterTeam?.id || null,
+      rosterTeam: u.assignment?.rosterTeam || null,
+      shiftId: u.assignment?.shiftId || u.assignment?.shift?.id || null,
+      shift: u.assignment?.shift as any,
+      workDays: u.assignment?.workDays || null,
+      primary: u.assignment?.primary ?? true,
+      active: true,
+      user: {
+        id: u.id,
+        name: u.name,
+        employeeId: u.employeeId,
+        role: u.role,
+      },
+    };
+    setOfficerForRoster(officer);
+    setIsRosterModalOpen(true);
+  };
+
+  const handleOpenAssignExisting = () => {
+    setOfficerForRoster(null);
+    setIsRosterModalOpen(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (targetUser) {
@@ -264,10 +313,22 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <Button onClick={handleOpenAdd} className="text-xs">
-          <UserPlus className="h-4 w-4 mr-1.5" />
-          Tambah Pengguna Baru
-        </Button>
+        <div className="flex items-center gap-2">
+          {activeSiteId && (
+            <Button
+              variant="outline"
+              onClick={handleOpenAssignExisting}
+              className="text-xs"
+            >
+              <UserCheck className="h-4 w-4 mr-1.5 text-blue-600 dark:text-blue-400" />
+              Tugaskan Petugas ke Situs
+            </Button>
+          )}
+          <Button onClick={handleOpenAdd} className="text-xs">
+            <UserPlus className="h-4 w-4 mr-1.5" />
+            Tambah Pengguna Baru
+          </Button>
+        </div>
       </div>
 
       {/* Controls: Search & Site Scope */}
@@ -355,6 +416,7 @@ export default function UsersPage() {
                 <TableHead>Email Akun</TableHead>
                 <TableHead>Peran (Role)</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Jadwal & Tim Roster</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -389,7 +451,47 @@ export default function UsersPage() {
                       {u.active ? 'AKTIF' : 'NONAKTIF'}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    {u.assignment ? (
+                      u.assignment.scheduleType === 'ROSTER' && u.assignment.rosterTeam ? (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] bg-indigo-50/70 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-medium inline-flex items-center gap-1"
+                        >
+                          <Layers className="h-3 w-3 text-indigo-500" />
+                          <span>Regu {u.assignment.rosterTeam.name}</span>
+                          <span className="opacity-75">({u.assignment.rosterTeam.code})</span>
+                        </Badge>
+                      ) : u.assignment.scheduleType === 'FIXED' && u.assignment.shift ? (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-medium inline-flex items-center gap-1"
+                        >
+                          <Clock className="h-3 w-3 text-emerald-500" />
+                          <span>{u.assignment.shift.name}</span>
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] text-slate-400 dark:text-slate-500">
+                          Belum Diatur
+                        </Badge>
+                      )
+                    ) : (
+                      <span className="text-slate-400 text-xs">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right space-x-1">
+                    {/* Adjust Roster Assignment (available if activeSiteId exists) */}
+                    {activeSiteId && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
+                        title="Atur Tim Roster & Jadwal"
+                        onClick={() => handleOpenAdjustRoster(u)}
+                      >
+                        <CalendarClock className="h-4 w-4" />
+                      </Button>
+                    )}
                     {canEditUserPhoto(currentUser?.role ?? 'OFFICER', u.role) && (
                       <Button
                         variant="ghost"
@@ -610,6 +712,19 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Assign / Adjust Officer Roster Modal */}
+      {activeSiteId && (
+        <AssignOfficerModal
+          isOpen={isRosterModalOpen}
+          onClose={() => setIsRosterModalOpen(false)}
+          siteId={activeSiteId}
+          officerToEdit={officerForRoster}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['users-list'] });
+          }}
+        />
+      )}
     </div>
   );
 }
