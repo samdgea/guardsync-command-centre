@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/authStore';
+import { useSiteContextStore } from '@/stores/siteContextStore';
 import { User, CreateUserPayload, UpdateUserPayload, canEditUserPhoto } from '@/types/user';
 import { UserRole } from '@/types/auth';
 import { Button } from '@/components/ui/button';
@@ -27,13 +28,15 @@ import {
 import { Pagination } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import PhotoUploader from '@/components/PhotoUploader';
-import { Users, UserPlus, Edit, KeyRound, UserX, Search, Camera } from 'lucide-react';
+import { Users, UserPlus, Edit, KeyRound, UserX, Search, Camera, Building2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+
+  const { selectedSiteId, setSelectedSiteId, sitesList } = useSiteContextStore();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -44,6 +47,57 @@ export default function UsersPage() {
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [newResetPassword, setNewResetPassword] = useState('');
 
+  // Determine site assignments for ADMIN
+  const assignedSites = useMemo(() => {
+    if (isSuperAdmin) {
+      return sitesList;
+    }
+    const assignments = currentUser?.assignments || [];
+    return assignments.map((a) => {
+      const match = sitesList.find((s) => s.id === (a.siteId || a.id));
+      if (match) return match;
+      return {
+        id: a.siteId || a.id,
+        name: a.name || a.site?.name || 'Situs Penugasan',
+        code: a.code || a.site?.code || 'SITE',
+        active: true,
+      };
+    });
+  }, [isSuperAdmin, sitesList, currentUser?.assignments]);
+
+  // Determine active site ID (scoping users)
+  const activeSiteId = useMemo(() => {
+    if (isSuperAdmin) {
+      return selectedSiteId || '';
+    }
+    if (selectedSiteId && assignedSites.some((s) => s.id === selectedSiteId)) {
+      return selectedSiteId;
+    }
+    if (assignedSites.length > 0) {
+      return assignedSites[0].id;
+    }
+    return '';
+  }, [isSuperAdmin, selectedSiteId, assignedSites]);
+
+  // Synchronize site selection for single-site or initial admin
+  useEffect(() => {
+    if (!isSuperAdmin && activeSiteId && selectedSiteId !== activeSiteId) {
+      setSelectedSiteId(activeSiteId);
+    }
+  }, [isSuperAdmin, activeSiteId, selectedSiteId, setSelectedSiteId]);
+
+  // Reset page when active site changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeSiteId]);
+
+  const currentSite = useMemo(() => {
+    if (isSuperAdmin) {
+      return sitesList.find((s) => s.id === activeSiteId);
+    }
+    return assignedSites.find((s) => s.id === activeSiteId);
+  }, [isSuperAdmin, sitesList, assignedSites, activeSiteId]);
+
   // Form create / edit state
   const [formData, setFormData] = useState<CreateUserPayload>({
     employeeId: '',
@@ -51,11 +105,12 @@ export default function UsersPage() {
     email: '',
     password: '',
     role: 'OFFICER',
+    siteId: activeSiteId || undefined,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['users-list', page],
-    queryFn: () => usersApi.getUsers({ page, limit: 10 }),
+    queryKey: ['users-list', activeSiteId, page],
+    queryFn: () => usersApi.getUsers({ page, limit: 10, siteId: activeSiteId || undefined }),
   });
 
   const createMutation = useMutation({
@@ -127,6 +182,7 @@ export default function UsersPage() {
       email: '',
       password: '',
       role: 'OFFICER',
+      siteId: activeSiteId || undefined,
     });
     setIsModalOpen(true);
   };
@@ -161,7 +217,10 @@ export default function UsersPage() {
         },
       });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({
+        ...formData,
+        siteId: activeSiteId || undefined,
+      });
     }
   };
 
@@ -172,6 +231,24 @@ export default function UsersPage() {
       u.employeeId.toLowerCase().includes(search.toLowerCase()) ||
       (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
   );
+
+  if (!isSuperAdmin && assignedSites.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="p-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center space-y-3">
+          <Building2 className="h-10 w-10 text-slate-400 mx-auto" />
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              Belum Ada Situs Ditugaskan
+            </h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Akun Admin Anda belum memiliki penugasan situs. Silakan hubungi Super Admin untuk menugaskan akun Anda ke situs pos pengamanan.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -193,8 +270,8 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-3">
+      {/* Controls: Search & Site Scope */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
@@ -204,6 +281,57 @@ export default function UsersPage() {
             className="pl-9 h-9 text-xs"
           />
         </div>
+
+        {/* Site Scope Context Badge or Selector */}
+        {!isSuperAdmin && assignedSites.length === 1 && currentSite && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-xs">
+            <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="text-slate-500">Situs:</span>
+            <span className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[200px]">
+              {currentSite.name} ({currentSite.code})
+            </span>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+              Terkunci
+            </Badge>
+          </div>
+        )}
+
+        {!isSuperAdmin && assignedSites.length > 1 && (
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-slate-500 shrink-0" />
+            <span className="text-xs text-slate-500 font-medium">Situs:</span>
+            <select
+              value={activeSiteId}
+              onChange={(e) => setSelectedSiteId(e.target.value)}
+              className="h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+            >
+              {assignedSites.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.code})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {isSuperAdmin && (
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-slate-500 shrink-0" />
+            <span className="text-xs text-slate-500 font-medium">Filter Situs:</span>
+            <select
+              value={activeSiteId}
+              onChange={(e) => setSelectedSiteId(e.target.value === '' ? null : e.target.value)}
+              className="h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+            >
+              <option value="">Semua Site (Global View)</option>
+              {sitesList.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.code})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Users Table */}
@@ -324,6 +452,16 @@ export default function UsersPage() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            {!targetUser && currentSite && (
+              <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-start gap-2 text-xs text-blue-700 dark:text-blue-300">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                <span>
+                  Pengguna baru akan otomatis ditugaskan ke situs{' '}
+                  <strong>{currentSite.name}</strong> ({currentSite.code}).
+                </span>
+              </div>
+            )}
+
             <div className="space-y-1">
               <label className="text-xs font-semibold">Nomor Induk Karyawan (NIK)</label>
               <Input

@@ -10,7 +10,7 @@ import {
 import { uploadProfilePhotoDirect } from '@/lib/uploadService';
 
 export const usersApi = {
-  getUsers: async (params?: { page?: number; limit?: number; active?: boolean }) => {
+  getUsers: async (params?: { page?: number; limit?: number; active?: boolean; siteId?: string }) => {
     const res = await api.get('/users', { params });
     return unwrap<User[]>(res);
   },

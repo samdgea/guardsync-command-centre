@@ -34,6 +34,7 @@ export interface CreateUserPayload {
   password: string;
   role: UserRole;
   email?: string;
+  siteId?: string;
 }
 
 export interface UpdateUserPayload {
